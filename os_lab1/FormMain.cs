@@ -35,11 +35,11 @@ namespace os_lab1
 
         private List<(int, int, int, int)> marks; //Список данных о метках, где заканчивается работа программы
 
-        private List<(int, int, int, int)> ThreadPause; //Список данных о метках, где останавливается поток
+        private List<(int, int, int, int)> ProcessPause; //Список данных о метках, где останавливается процесс
 
-        private List<(int, int, int, int)> ThreadStop; //Список данных о метках, где заканчивается поток
+        private List<(int, int, int, int)> ProcessStop; //Список данных о метках, где заканчивается процесс
 
-        private List<(int, int, int, int)> ThreadRepeat; //Список данных о метках, где продолжается поток
+        private List<(int, int, int, int)> ProcessRepeat; //Список данных о метках, где продолжается процесс
 
         private void Initial()
         {
@@ -47,9 +47,9 @@ namespace os_lab1
             markArray = new List<(int, int, int, int)>();
             marks = new List<(int, int, int, int)>();
             marks.Add((1, 0, 1, height));
-            ThreadStop = new List<(int, int, int, int)>();
-            ThreadPause = new List<(int, int, int, int)>();
-            ThreadRepeat = new List<(int, int, int, int)>();
+            ProcessStop = new List<(int, int, int, int)>();
+            ProcessPause = new List<(int, int, int, int)>();
+            ProcessRepeat = new List<(int, int, int, int)>();
             bmp = new Bitmap(pictureBox.Width, pictureBox.Height);
             gr = Graphics.FromImage(bmp);
             Draw();
@@ -106,15 +106,15 @@ namespace os_lab1
                 int markWidth = (tempWidth + thread.ThreadOneIterationTime) * 10 - 13; // координата x для отметок окончания процесса
                 if (thread.Status == ThreadStatusEnum.Stop)
                 {
-                    ThreadStop.Add((markWidth, h - 10, 8, 10));
+                    ProcessStop.Add((markWidth, h - 10, 8, 10));
                 }
                 else if (thread.Status == ThreadStatusEnum.Pause)
                 {
-                    ThreadPause.Add((markWidth, h - 10, 8, 10));
+                    ProcessPause.Add((markWidth, h - 10, 8, 10));
                 }
                 else if (thread.Status == ThreadStatusEnum.Repeat)
                 {
-                    ThreadRepeat.Add((tempWidth * 10 + 2, h - 8, tempWidth * 10 + thread.ThreadOneIterationTime * 4, h - 8));
+                    ProcessRepeat.Add((tempWidth * 10 + 2, h - 8, tempWidth * 10 + thread.ThreadOneIterationTime * 4, h - 8));
                 }
 
                 tempWidth += thread.ThreadOneIterationTime;
@@ -130,18 +130,18 @@ namespace os_lab1
                 g.DrawLine(mark, m.Item1 + 2, m.Item2, m.Item3 + 2, m.Item4);
             }
 
-            foreach (var e in ThreadStop)
+            foreach (var e in ProcessStop)
             {
                 DrawStop(g, BrushStop, e.Item1, e.Item2, e.Item3, e.Item4);
 
             }
 
-            foreach (var e in ThreadPause)
+            foreach (var e in ProcessPause)
             {
                 DrawPause(g, BrushPause, e.Item1, e.Item2, e.Item3, e.Item4);
             }
 
-            foreach (var e in ThreadRepeat)
+            foreach (var e in ProcessRepeat)
             {
                 DrawRepeat(g, PenRepeat, e.Item1, e.Item2, e.Item3, e.Item4, 4);
             }

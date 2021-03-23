@@ -10,7 +10,7 @@ namespace os_lab1
     {
         public List<Process> Processes { get; private set; }
 
-        public FormMain Form { get; private set; } 
+        public FormMain Form { get; private set; }
 
         public SystemCore(FormMain form)
         {
@@ -34,7 +34,7 @@ namespace os_lab1
                         i--;
                     }
                     //Максимальное время для процесса
-                    int maximumTimeForProcesses = 500;
+                    int maximumTimeForProcesses = 350;
                     if (temp > maximumTimeForProcesses)
                     {
                         return;
@@ -49,10 +49,11 @@ namespace os_lab1
 
         public void Start()
         {
-            int n = new Random().Next() % 3 + 1;
+            Random rand = new Random();
+            int n = rand.Next(6, 11);
             for (int i = 0; i < n; ++i)
             {
-                Processes.Add(new Process(i, Form));
+                Processes.Add(new Process(i, rand.Next(1, 5), Form));
             }
             toPlan();
         }

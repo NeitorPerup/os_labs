@@ -18,18 +18,17 @@ namespace os_lab1
 
         public List<Thread> Threads { get; private set; }
 
-        public Process(int id, FormMain form)
+        public Process(int id, int ThreadCount, FormMain form)
         {
             ProcessId = id;
             Form = form;
             Threads = new List<Thread>();
-            ProcessExecutionTime = 0;
+            ProcessExecutionTime = 250;
+            List<int> ThreadExecutionTimes = RandomThreadExecutionTime(ThreadCount);
 
-            int n = new Random().Next() % 3 + 1; // количество потоков
-            for (int i = 0; i < n; ++i)
+            for (int i = 0; i < ThreadCount; ++i)
             {
-                Threads.Add(new Thread(i, ProcessId, Form));
-                ProcessExecutionTime += Threads[i].ThreadExecutionTime;
+                Threads.Add(new Thread(i, ProcessId, ThreadExecutionTimes[i], Form)) ;
             }
         }
 
@@ -43,7 +42,8 @@ namespace os_lab1
             int temp = 0;
             while (true)
             {
-                for (int i = 0; i < Threads.Count(); i++)
+                int i = 0;
+                for (; i < Threads.Count(); i++)
                 {
                     Threads[i].Start();
                     temp += Threads[i].ThreadOneIterationTime;
@@ -67,6 +67,25 @@ namespace os_lab1
                     return;
                 }
             }
+        }
+
+        private List<int> RandomThreadExecutionTime(int n)
+        {
+            Random rand = new Random(); // Генератор случайных чисел
+            List<int> res = new List<int>(); // возвращаемый список
+            int tmp = 0; // записываем сколько времени уже зарандомили
+            int contrastTime = ProcessExecutionTime / 15; // минимальное время для потока
+            int arrangeTime = ProcessExecutionTime / n;
+
+            for (int i = 0; i < n - 1; ++i)
+            {
+                int time = rand.Next(arrangeTime - contrastTime, arrangeTime + contrastTime);
+                res.Add(time);
+                tmp += time;
+            }
+            res.Add(ProcessExecutionTime - tmp);
+
+            return res;
         }
     }
 }

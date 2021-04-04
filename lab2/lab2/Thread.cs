@@ -14,49 +14,45 @@ namespace lab2
 
         //Оставшееся время выполнения процесса
         public int ThreadExecutionTime;
-        public int threadExecutionTime 
+        public int threadExecutionTime
         {
-            get { if (!hasInputOutput) { return ThreadExecutionTime; } else { return IOWaitingTime; }} 
-            private set { ThreadExecutionTime = value; } 
+            get { if (!hasInputOutput) { return ThreadExecutionTime; } else { return IOWaitingTime; } }
+            private set { ThreadExecutionTime = value; }
         }
 
         //Время одной итерации процесса
         public int timeOfOneIteration { get; private set; }
 
         //Есть ли у этого потока ввод/вывод
-        private bool hasInputOutput;
+        public bool hasInputOutput { get; set; }
 
         //Время до отклика устройства ввода-вывода
-        private int IOWaitingTime;
+        public int IOWaitingTime { get; private set; }
 
-        public Thread(int tid, int pid, bool hasInputOutput, bool displayLabel)
+        public Thread(int tid, int pid, bool hasInputOutput, int OneIteration, int Execution, int IOWating, bool print)
         {
-            threadExecutionTime = (new Random().Next() % 21) + 10;
-            timeOfOneIteration = (new Random().Next() % 8) + 3;
+            threadExecutionTime = Execution;
+            timeOfOneIteration = OneIteration;
             this.tid = tid;
             this.pid = pid;
             this.hasInputOutput = hasInputOutput;
             if (hasInputOutput)
             {
-                IOWaitingTime = (new Random().Next() % 21) + 10;
+                IOWaitingTime = IOWating;
             }
-            if (displayLabel)
+            if (print)
             {
-                Console.WriteLine("Создаем поток. TID: " + tid + (hasInputOutput ? " Есть ввод/вывод" : " Нет ввода/вывода") + ". Время выполнения " + threadExecutionTime + ". Время одной итерации " + timeOfOneIteration);
+                Console.WriteLine("Создаем поток. TID: " + tid + (hasInputOutput ? " Есть ввод/вывод" : " Нет ввода/вывода") + ". Время выполнения "
+                + threadExecutionTime + ". Время одной итерации " + timeOfOneIteration);
             }
+
         }
 
-         //Запуск потока
+        //Запуск потока
         public void start()
         {
             Console.WriteLine("Начинаем поток. PID: " + pid + ", TID: " + tid);
             Console.WriteLine("Нужно времени для выполнения: " + (hasInputOutput ? IOWaitingTime : threadExecutionTime));
-        }
-
-        //Возвращет есть ли у потока ввод/вывод
-        public bool isHasInputOutput()
-        {
-            return hasInputOutput;
         }
 
         //Запуск потока без прерываний
@@ -105,18 +101,14 @@ namespace lab2
             }
         }
 
-        /**
-         * Уменьшение времени ожидания
-         * @param time Время на которое уменьшается ожидание
-         */
-        public void waitIO(int time)
+        public int waitIO(int time)
         {
-            IOWaitingTime -= time;
+            return IOWaitingTime -= time;
         }
 
         public object Clone()
         {
-            return new Thread(tid, pid, hasInputOutput, true);
+            return new Thread(tid, pid, hasInputOutput, timeOfOneIteration, threadExecutionTime, IOWaitingTime, false);
         }
     }
 }

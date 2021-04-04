@@ -19,35 +19,21 @@ namespace lab2
         {
             Processes = new List<Process>();
             Threads = new Dictionary<int, List<Thread>>();
-           
+            Random rand = new Random();
             for (int i = 0; i < n; i++)
             {
-                Processes.Add(new Process(Processes.Count, true));
-                createThreads(Processes.Count - 1);
+                Process process = new Process(i, rand.Next(1, 4));
+                Processes.Add(process);
+                Threads.Add(i, process.Threads);
             }
         }
-
-        /// <summary>
-        /// Метод для создания новых потоков
-        /// <param name="pid"> идентификатор процесса </param> 
-        /// </summary>
-        public void createThreads(int pid)
-        {
-            List<Thread> threads = new List<Thread>();
-            for (int i = 0; i < new Random().Next() % 2 + 1; i++)
-            {
-                threads.Add(Processes[Processes.Count - 1].createThread(threads.Count));
-            }
-            Threads.Add(pid, threads);
-        }
-
         /// <summary>
         /// Метод планирования процессов
         /// </summary>
         public int toPlanProcessWithoutInterrupting()
         {
             var processes = Processes.Select(x => x).ToList();
-            var threads = Threads.ToDictionary(x => x.Key, x => x.Value.Select(x => (Thread)x.Clone()).ToList());
+            var threads = Threads.ToDictionary(x => x.Key, x => x.Value.Select(x => (Thread)x.Clone()).ToList()); // клонируем процессы и потоки
 
             Console.WriteLine("\n\n" + "НАЧИНАЕМ ПЛАНИРОВАНИЕ ПРОЦЕССОВ БЕЗ ПРЕРЫВАНИЙ!" + "\n\n");
 
@@ -60,14 +46,14 @@ namespace lab2
 
                     processes[i].start(); //Процесс ... начался
 
-                    int temp = toPlanThreadWithoutInterrupting(processes[i].pid, threads); //temp - затраченное на процесс время
+                    int temp = toPlanThreadWithoutInterrupting(processes[i].Pid, threads); //temp - затраченное на процесс время
 
                     fullExecutionTime += temp;
 
                     //Если затраченное на процесс вреямя равно
                     if (temp == 0)
                     {
-                        Console.WriteLine("Удаляем процесс: " + processes[i].pid);
+                        Console.WriteLine("Удаляем процесс: " + processes[i].Pid);
                         processes.RemoveAt(i); //Удаляем этот процесс
                         break;
                     }
@@ -86,7 +72,6 @@ namespace lab2
         /// </summary>
         public int toPlanThreadWithoutInterrupting(int pid, Dictionary<int, List<Thread>> threads)
         {
-
             int temp = 0;//temp - затраченное на процессы время
             while (true)
             {
@@ -127,7 +112,7 @@ namespace lab2
         public int toPlanProcessWithInterrupting()
         {
             var processes = Processes.Select(x => x).ToList();
-            var threads = Threads.ToDictionary(x => x.Key, x => x.Value.Select(x => (Thread)x.Clone()).ToList());
+            var threads = Threads.ToDictionary(x => x.Key, x => x.Value.Select(x => (Thread)x.Clone()).ToList()); // клонируем процессы и потоки
 
             Console.WriteLine("\n\n" + "НАЧИНАЕМ ПЛАНИРОВАНИЕ ПРОЦЕССОВ С ПРЕРЫВАНИЯМИ!" + "\n\n");
 
@@ -139,14 +124,14 @@ namespace lab2
                 {
                     processes[i].start();//Процесс ... начался
 
-                    int temp = toPlanThreadWithInterrupting(processes[i].pid, threads);//temp - затраченное на процесс время
+                    int temp = toPlanThreadWithInterrupting(processes[i].Pid, threads);//temp - затраченное на процесс время
 
                     fullExecutionTime += temp;
 
                     //Если затраченное на процесс вреямя равно 0
                     if (temp == 0)
                     {
-                        Console.WriteLine("Удаляем процесс: " + processes[i].pid);
+                        Console.WriteLine("Удаляем процесс: " + processes[i].Pid);
                         processes.RemoveAt(i);//Удаляем этот процесс
                         break;
                     }
@@ -188,9 +173,9 @@ namespace lab2
                     }
 
                     threads[pid][i].start(); //Запускаем поток
-                    
+
                     int resultOfRunning = threads[pid][i].runWithInterrupting(); //Записываем результат запуска потока
-                    
+
                     foreach (Thread blockedThread in blockedThreads) //Тем временем заблокированные потоки ждут ввода-вывода
                     {
                         blockedThread.waitIO(resultOfRunning);

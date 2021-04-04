@@ -6,7 +6,7 @@ namespace lab2
     {
         static void Main(string[] args)
         {
-            SystemCore systemCore = new SystemCore(new Random().Next() % 3 + 1);
+            SystemCore systemCore = new SystemCore(new Random().Next(2, 4));
 
             int TimeWithoutInterrapting = systemCore.toPlanProcessWithoutInterrupting();
             int TimeWithInterrapting = systemCore.toPlanProcessWithInterrupting();

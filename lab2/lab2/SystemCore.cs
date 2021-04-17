@@ -13,16 +13,17 @@ namespace lab2
         //максимальное время на потоки (на один процесс)
         private int maxTimeOfThreads = 30;
 
-        List<Thread> blockedThreads = new List<Thread>();//Заблокирлованные потоки
+        private bool ProcessEnd = false;
 
         public SystemCore(int n)
         {
             Processes = new List<Process>();
             Threads = new Dictionary<int, List<Thread>>();
             Random rand = new Random();
+            int timeOfOneIteration = rand.Next(3, 10);
             for (int i = 0; i < n; i++)
             {
-                Process process = new Process(i, rand.Next(1, 4));
+                Process process = new Process(i, rand.Next(1, 4), timeOfOneIteration);
                 Processes.Add(process);
                 Threads.Add(i, process.Threads);
             }
@@ -80,7 +81,24 @@ namespace lab2
 
                     threads[pid][i].start();//Запускаем поток
 
-                    temp += threads[pid][i].runWithoutInterrupting();
+                    int time = threads[pid][i].runWithoutInterrupting();
+                    temp += time;
+
+                    if (threads[pid][i].hasInputOutput && threads[pid][i].IOWatingCount >= 0)
+                    {
+                        Console.WriteLine($"Время ожидания потока: {time}, Осталось взаимодейсвий с устройством ввода/вывода: {threads[pid][i].IOWatingCount}");
+                        Console.WriteLine($"Затраченное на поток время: {time}");
+                        Console.WriteLine("Затраченное на процесс время: " + temp + ". (Максимальное время итерации процесса " + maxTimeOfThreads + ")" + '\n');
+                        if (temp >= maxTimeOfThreads)
+                        {
+                            Console.WriteLine("Выхожу из планировщика потоков" + '\n');
+                            return temp;
+                        }
+                        break;
+                    }
+
+                    Console.WriteLine($"Затраченное на поток время: {time}");
+                    Console.WriteLine("Затраченное на процесс время: " + temp + ". (Максимальное время итерации процесса " + maxTimeOfThreads + ")" + '\n');
 
                     //Если оставшееся время потока меньше либо равно нулю
                     if (threads[pid][i].threadExecutionTime <= 0)
@@ -89,8 +107,7 @@ namespace lab2
                         threads[pid].RemoveAt(i);//Удаляем поток
                         i--;
                     }
-
-                    Console.WriteLine("Затраченное на процесс время: " + temp + ". (Максимальное время итерации процесса " + maxTimeOfThreads + ")" + '\n');
+                    
 
                     //Если затраченное на процессы время превысило максимальное допустимое вресмя на один процесс
                     if (temp >= maxTimeOfThreads)
@@ -129,7 +146,7 @@ namespace lab2
                     fullExecutionTime += temp;
 
                     //Если затраченное на процесс вреямя равно 0
-                    if (temp == 0)
+                    if (ProcessEnd)
                     {
                         Console.WriteLine("Удаляем процесс: " + processes[i].Pid);
                         processes.RemoveAt(i);//Удаляем этот процесс
@@ -152,43 +169,27 @@ namespace lab2
         /// </summary>
         public int toPlanThreadWithInterrupting(int pid, Dictionary<int, List<Thread>> threads)
         {
-
+            ProcessEnd = false;
             int temp = 0;//temp - затраченное на процессы время
             while (true)
             {
                 for (int i = 0; i < threads[pid].Count; i++)
                 {
-                    //Если этот процесс находится в заблокированных
-                    if (blockedThreads.Contains(threads[pid][i]))
-                    {
-                        if (threads[pid][i].threadExecutionTime <= 0)
-                        {
-                            blockedThreads.Remove(threads[pid][i]);
-                            Console.WriteLine("Удаляем поток: " + threads[pid][i].tid);
-                            threads[pid].RemoveAt(i);
-                            i--;
-                        }
-                        //переходим к планировке следующих процессов
-                        continue;
-                    }
 
                     threads[pid][i].start(); //Запускаем поток
 
                     int resultOfRunning = threads[pid][i].runWithInterrupting(); //Записываем результат запуска потока
 
-                    foreach (Thread blockedThread in blockedThreads) //Тем временем заблокированные потоки ждут ввода-вывода
-                    {
-                        blockedThread.waitIO(resultOfRunning);
-                    }
-
                     //Если результат вернул -1 значит поток так и не дождался ввода-вывода
                     if (resultOfRunning == -1)
                     {
-                        temp += threads[pid][i].timeOfOneIteration;
-                        blockedThreads.Add(threads[pid][i]); //Добавляем этот поток в заблокированные
+                        Console.WriteLine($"Осталось взаимодейсвий с устройством ввода/вывода: {threads[pid][i].IOWatingCount}");
+                        Console.WriteLine("Затраченное на процесс время: " + temp + ". (Максимальное время итерации процесса " + maxTimeOfThreads + ")" + '\n');
+                        return temp;
                     }
                     else if (resultOfRunning >= 0)
                     {
+                        Console.WriteLine($"Затраченное на поток время: {resultOfRunning}");
                         temp += resultOfRunning;
                     }
 
@@ -210,21 +211,10 @@ namespace lab2
                     }
                 }
 
-                bool existThreadWithoutBlocking = false;
-
-                //Ищем есть ли поток без блокировки
-                for (int i = 0; i < threads[pid].Count; i++)
+                //Если потоки у данного процесса закончились 
+                if (threads[pid].Count == 0)
                 {
-                    if (!blockedThreads.Contains(threads[pid][i]))
-                    {
-                        existThreadWithoutBlocking = true;
-                        break;
-                    }
-                }
-
-                //Если потоки у данного процесса закончились или нет потоков без блокировки
-                if (threads[pid].Count == 0 || !existThreadWithoutBlocking)
-                {
+                    ProcessEnd = true;
                     return temp;
                 }
             }

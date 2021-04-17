@@ -16,8 +16,8 @@ namespace lab2
         public int ThreadExecutionTime;
         public int threadExecutionTime
         {
-            get { if (!hasInputOutput) { return ThreadExecutionTime; } else { return IOWaitingTime; } }
-            private set { ThreadExecutionTime = value; }
+            get { if (!hasInputOutput || IOWatingCount <= 0) { return ThreadExecutionTime; } else { return IOWaitingTime; } }
+            set { ThreadExecutionTime = value; }
         }
 
         //Время одной итерации процесса
@@ -27,9 +27,11 @@ namespace lab2
         public bool hasInputOutput { get; set; }
 
         //Время до отклика устройства ввода-вывода
-        public int IOWaitingTime { get; private set; }
+        public int IOWaitingTime { get; set; }
 
-        public Thread(int tid, int pid, bool hasInputOutput, int OneIteration, int Execution, int IOWating, bool print)
+        public int IOWatingCount { get; set; }
+
+        public Thread(int tid, int pid, bool hasInputOutput, int OneIteration, int Execution, int IOWating, int IOWatingCount, bool print)
         {
             threadExecutionTime = Execution;
             timeOfOneIteration = OneIteration;
@@ -39,59 +41,45 @@ namespace lab2
             if (hasInputOutput)
             {
                 IOWaitingTime = IOWating;
+                this.IOWatingCount = IOWatingCount;
             }
             if (print)
             {
-                Console.WriteLine("Создаем поток. TID: " + tid + (hasInputOutput ? " Есть ввод/вывод" : " Нет ввода/вывода") + ". Время выполнения "
-                + threadExecutionTime + ". Время одной итерации " + timeOfOneIteration);
+                Console.WriteLine("\nСоздаем поток. TID: " + tid + (hasInputOutput ? " Есть ввод/вывод." : " Нет ввода/вывода.") 
+                    + (hasInputOutput?" Количесвто взаимодейтсвий с утройством ввода/вывода: " + IOWatingCount : "")
+                    + ".\nВремя выполнения " + threadExecutionTime 
+                    + ". Время одной итерации " + timeOfOneIteration);
             }
-
         }
 
         //Запуск потока
         public void start()
         {
             Console.WriteLine("Начинаем поток. PID: " + pid + ", TID: " + tid);
-            Console.WriteLine("Нужно времени для выполнения: " + (hasInputOutput ? IOWaitingTime : threadExecutionTime));
+            Console.WriteLine("Нужно времени для выполнения: " +  threadExecutionTime);
         }
 
         //Запуск потока без прерываний
         public int runWithoutInterrupting()
         {
             //Если имеет ввод-вывод
-            if (hasInputOutput)
+            if (hasInputOutput && --IOWatingCount >= 0)
             {
-                int spentTime = IOWaitingTime;
-                IOWaitingTime = 0;
-                return spentTime;
+                return IOWaitingTime;
             }
             //Если не имеет ввод вывод
-            else
-            {
-                threadExecutionTime -= timeOfOneIteration;
-                return timeOfOneIteration;
-            }
+            threadExecutionTime -= timeOfOneIteration;
+            return timeOfOneIteration;
+
         }
 
         //Запуск потока с прерываниями
         public int runWithInterrupting()
         {
             //Если имеет ввод-вывод
-            if (hasInputOutput)
+            if (hasInputOutput && --IOWatingCount >= 0)
             {
-
-                if (IOWaitingTime > timeOfOneIteration)
-                {
-                    IOWaitingTime -= timeOfOneIteration;
-                    return -1;
-                }
-                else
-                {
-                    int spentTime = IOWaitingTime;
-                    IOWaitingTime = 0;
-                    return spentTime;
-                }
-
+                return -1;
             }
             //Если не имеет ввод вывод
             else
@@ -100,7 +88,6 @@ namespace lab2
                 return timeOfOneIteration;
             }
         }
-
         public int waitIO(int time)
         {
             return IOWaitingTime -= time;
@@ -108,7 +95,7 @@ namespace lab2
 
         public object Clone()
         {
-            return new Thread(tid, pid, hasInputOutput, timeOfOneIteration, threadExecutionTime, IOWaitingTime, false);
+            return new Thread(tid, pid, hasInputOutput, timeOfOneIteration, threadExecutionTime, IOWaitingTime, IOWatingCount, false);
         }
     }
 }

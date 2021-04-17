@@ -11,19 +11,20 @@ namespace lab2
 
         public List<Thread> Threads { get; private set; }
 
-        public Process(int pid, int n)
+        public Process(int pid, int n, int timeOfOneIteration)
         {
             Pid = pid;
             Threads = new List<Thread>();
             Random rand = new Random();
             Console.WriteLine("Создаем процесс. PID: " + pid + " Количество потоков: " + n);
+            
             for (int i = 0; i < n; i++)
             {
-                bool hasIO = rand.Next(0, 2) == 1 ? true : false;
-                int timeOfOneIteration = rand.Next(3, 10);
+                bool hasIO = rand.Next(0, 2) == 1 ? true : false;                
                 int threadExecutionTime = rand.Next(10, 30);
-                int IOWaitingTime = rand.Next(10, 30);
-                Threads.Add(new Thread(i, pid, hasIO, timeOfOneIteration, threadExecutionTime, IOWaitingTime, true));
+                int IOWaitingTime = rand.Next(10, 21);
+                int IOWatingCount = rand.Next(1, 3);
+                Threads.Add(new Thread(i, pid, hasIO, timeOfOneIteration, threadExecutionTime, IOWaitingTime, IOWatingCount, true));
             }
         }
 
